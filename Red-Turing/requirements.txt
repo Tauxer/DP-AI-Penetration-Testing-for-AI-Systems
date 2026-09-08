@@ -1,0 +1,13 @@
+# Núcleo de Red Turing
+PyYAML>=6.0
+python-dotenv>=1.0.0
+
+# Objetivo de tipo http
+requests>=2.31.0
+
+# Juez LLM (opcional: sin esto, córrelo con --sin-juez)
+openai>=1.30.0
+
+# Para atacar un objetivo in-process (tipo guardrail o agente) hace falta además
+# instalar los requirements DEL PROYECTO OBJETIVO en este mismo entorno:
+#   pip install -r ../LangChain-AgenteIA-MultiTool-Seguridad/requirements.txt

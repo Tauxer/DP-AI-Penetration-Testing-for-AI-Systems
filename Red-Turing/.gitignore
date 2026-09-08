@@ -1,0 +1,15 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+
+# Rutas locales y nombres de variables propios de cada máquina
+targets.yaml
+
+# Los informes se generan; guarda a mano solo las líneas base que quieras
+# versionar, en reports/baseline/
+reports/*.json
+reports/*.html
+!reports/baseline/

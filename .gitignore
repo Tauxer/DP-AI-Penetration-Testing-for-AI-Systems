@@ -1,0 +1,30 @@
+# ── Solo se publican Red-Turing, dashboard-seguridad y deepteam-pruebas ──
+# El agente objetivo (TramiBot) vive en su propio repositorio.
+LangChain-AgenteIA-MultiTool-Seguridad/
+LangChain-AgenteIA-MultiTool-Seguridad-LLMLocal/
+# Clon de referencia del repo de DeepTeam: se instala con pip, no se versiona aquí.
+deepteam/
+presentacion/
+
+# ── Secretos y configuración local ──
+.env
+.env.*
+!.env.example
+Red-Turing/targets.yaml
+dashboard-seguridad/backend/config.json
+
+# ── Entornos y artefactos ──
+.venv/
+venv/
+__pycache__/
+*.pyc
+node_modules/
+dashboard-seguridad/frontend/dist/
+.DS_Store
+
+# ── Informes: contienen payloads y respuestas literales del agente ──
+Red-Turing/reports/*.json
+Red-Turing/reports/*.html
+!Red-Turing/reports/baseline/
+deepteam-pruebas/resultados/*.json
+deepteam-pruebas/resultados/nativo/

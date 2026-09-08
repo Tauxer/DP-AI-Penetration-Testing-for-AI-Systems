@@ -1,0 +1,1157 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Red Turing</title>
+<style>
+:root{
+  color-scheme:light;
+  --fondo:#f6f5f2;--panel:#fcfcfb;--panel-2:#f0efec;--borde:#e3e1dc;
+  --texto:#0b0b0b;--texto-2:#52514e;--texto-3:#8a8883;
+  --serie:#2a78d6;--serie-suave:#cde2fb;
+  --ok:#0ca30c;--aviso:#fab219;--serio:#ec835a;--critico:#d03b3b;
+  --ok-ink:#006300;--aviso-ink:#8a5a00;--serio-ink:#9a3f1c;--critico-ink:#a02626;
+  --sombra:0 1px 2px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --fondo:#141413;--panel:#1a1a19;--panel-2:#232322;--borde:#2f2f2d;
+    --texto:#ffffff;--texto-2:#c3c2b7;--texto-3:#8a8883;
+    --serie:#3987e5;--serie-suave:#1c3a63;
+    --ok-ink:#5fd35f;--aviso-ink:#fab219;--serio-ink:#ec835a;--critico-ink:#e66767;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--fondo);color:var(--texto);font:14px/1.5 ui-sans-serif,-apple-system,"Segoe UI",Inter,sans-serif}
+button,select,input{font:inherit;color:inherit}
+code,pre,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+
+.app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+@media (max-width:900px){.app{grid-template-columns:1fr}aside{position:static!important;height:auto!important;border-right:0!important;border-bottom:1px solid var(--borde)}}
+
+/* ── barra lateral ── */
+aside{position:sticky;top:0;height:100vh;overflow:auto;background:var(--panel);border-right:1px solid var(--borde);padding:20px 16px}
+.marca{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.marca .logo{width:28px;height:28px;border-radius:7px;background:var(--critico);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+.marca h1{font-size:15px;margin:0;letter-spacing:.01em}
+.marca-sub{color:var(--texto-3);font-size:12px;margin:0 0 18px 38px}
+.grupo{margin-top:16px}
+.grupo h2{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--texto-3);margin:0 0 6px;font-weight:600}
+.corrida{display:block;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:8px 10px;cursor:pointer;line-height:1.35}
+.corrida:hover{background:var(--panel-2)}
+.corrida.activa{background:var(--panel-2);box-shadow:inset 3px 0 0 var(--serie)}
+.corrida .fecha{display:block;font-size:12.5px}
+.corrida .meta{display:block;font-size:11.5px;color:var(--texto-3);margin-top:1px}
+.corrida .chip{float:right;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.etq{font-size:10.5px;padding:1px 6px;border-radius:99px;border:1px solid var(--borde);color:var(--texto-2);vertical-align:middle;margin-left:4px}
+.vacio{color:var(--texto-3);font-size:12.5px;padding:8px 10px}
+.vacio code{display:block;margin-top:8px;font-size:11.5px;white-space:pre-wrap}
+
+/* botones */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--borde);background:var(--panel);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;color:var(--texto);line-height:1.2}
+.btn:hover{background:var(--panel-2)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primario{background:var(--critico);border-color:var(--critico);color:#fff}
+.btn-primario:hover{background:#b73232;border-color:#b73232}
+.btn-neutro{background:var(--serie);border-color:var(--serie);color:#fff}
+.btn-neutro:hover{filter:brightness(.92)}
+.btn-bloque{width:100%}
+.accion{margin:4px 0 14px}
+.en-curso{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:var(--panel-2);border:1px solid var(--borde);border-radius:8px;padding:8px 10px;cursor:pointer;margin-top:8px;font-size:12.5px}
+.en-curso .punto{width:9px;height:9px;border-radius:50%;background:var(--critico);flex:none;animation:pulso 1.2s ease-in-out infinite}
+.en-curso b{font-variant-numeric:tabular-nums}
+.en-curso .meta{color:var(--texto-3);margin-left:auto;font-size:11.5px}
+@keyframes pulso{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
+
+/* ── contenido ── */
+main{padding:24px 28px;min-width:0}
+.cab{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.cab h2{margin:0;font-size:20px;letter-spacing:-.01em}
+.cab .meta{color:var(--texto-3);font-size:12.5px}
+.cab .etq{font-size:11.5px}
+.cab .derecha{margin-left:auto;display:flex;gap:8px;align-items:center}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+.tiles.cinco{grid-template-columns:repeat(5,1fr)}
+@media (max-width:1100px){.tiles,.tiles.cinco{grid-template-columns:repeat(2,1fr)}}
+.tile.llm{border-color:var(--serie)}
+.llm-cedio{color:var(--critico-ink);font-weight:600}.llm-aguanto{color:var(--ok-ink)}.llm-revisar{color:var(--aviso-ink)}
+.tile{background:var(--panel);border:1px solid var(--borde);border-radius:10px;padding:16px 18px;box-shadow:var(--sombra)}
+.tile .rot{font-size:12px;color:var(--texto-2);margin-bottom:6px}
+.tile .val{font-size:30px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.tile .sub{font-size:12px;color:var(--texto-3);margin-top:6px}
+.estado{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;margin-top:8px}
+.estado i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.e-ok{color:var(--ok-ink)}.e-ok i{background:var(--ok)}
+.e-aviso{color:var(--aviso-ink)}.e-aviso i{background:var(--aviso)}
+.e-serio{color:var(--serio-ink)}.e-serio i{background:var(--serio)}
+.e-critico{color:var(--critico-ink)}.e-critico i{background:var(--critico)}
+.e-neutro{color:var(--texto-3)}.e-neutro i{background:var(--texto-3)}
+
+.fila{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+@media (max-width:1000px){.fila{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--borde);border-radius:10px;padding:16px 18px;box-shadow:var(--sombra);min-width:0}
+.panel h3{margin:0 0 2px;font-size:14px}
+.panel .desc{font-size:12px;color:var(--texto-3);margin:0 0 12px}
+.nota{color:var(--texto-3);font-size:12.5px;padding:14px 0}
+
+/* gráfico de tendencia */
+.viz{position:relative}
+.viz svg{display:block;width:100%;height:190px;overflow:visible}
+.viz .grid{stroke:var(--borde);stroke-width:1}
+.viz .eje{fill:var(--texto-3);font-size:11px}
+.viz .linea{fill:none;stroke:var(--serie);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.viz .punto{fill:var(--serie);stroke:var(--panel);stroke-width:2;r:4.5}
+.viz .punto.sel{r:6}
+.viz .punto-hit{fill:transparent;r:14;cursor:pointer}
+.viz .directa{fill:var(--texto);font-size:12px;font-weight:600}
+.tip{position:absolute;pointer-events:none;background:var(--texto);color:var(--fondo);font-size:12px;padding:6px 9px;border-radius:6px;white-space:nowrap;transform:translate(-50%,calc(-100% - 12px));opacity:0;transition:opacity .08s}
+.tip.on{opacity:1}
+
+/* barras */
+.barras{display:grid;gap:8px}
+.barra{display:grid;grid-template-columns:minmax(120px,190px) 1fr 48px;gap:10px;align-items:center;font-size:13px;cursor:pointer;border-radius:6px;padding:2px 4px;margin:0 -4px}
+.barra:hover{background:var(--panel-2)}
+.barra.sel .nom{font-weight:600}
+.barra.quieta{cursor:default}.barra.quieta:hover{background:none}
+.barra .nom{color:var(--texto);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.barra .pista{height:10px;background:var(--panel-2);border-radius:4px;position:relative;overflow:hidden}
+.barra .pista>i{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0;min-width:2px}
+.barra .pista>i.cero{display:none}
+.barra .num{text-align:right;font-variant-numeric:tabular-nums;color:var(--texto-2)}
+.barra .num b{color:var(--texto)}
+.f-ok{background:var(--ok)}.f-aviso{background:var(--aviso)}.f-serio{background:var(--serio)}.f-critico{background:var(--critico)}.f-serie{background:var(--serie)}
+.leyenda{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--texto-3);margin-top:12px}
+.leyenda span{display:inline-flex;align-items:center;gap:5px}
+.leyenda i{width:9px;height:9px;border-radius:2px;display:inline-block}
+
+/* comparación */
+.cmp-ctrl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+select,input[type=search],input[type=number]{background:var(--panel);border:1px solid var(--borde);border-radius:7px;padding:6px 9px;font-size:13px;min-width:0}
+.cmp-res{display:grid;gap:10px}
+.cmp-bloque h4{margin:0 0 4px;font-size:12.5px;display:flex;gap:8px;align-items:center}
+.cmp-bloque ul{margin:0;padding:0;list-style:none;font-size:12.5px}
+.cmp-bloque li{padding:4px 0;border-top:1px solid var(--borde);display:flex;gap:8px;align-items:baseline}
+.cmp-bloque li .mono{font-size:12px}
+.cmp-bloque li .ev{color:var(--texto-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cnt{display:inline-block;min-width:20px;text-align:center;font-size:11px;border-radius:99px;padding:1px 6px;background:var(--panel-2);color:var(--texto-2);font-weight:600}
+.cnt.rojo{background:var(--critico);color:#fff}.cnt.verde{background:var(--ok);color:#fff}
+.delta{font-size:13px;color:var(--texto-2);margin-left:auto}
+
+/* hallazgos */
+.filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filtros input[type=search]{flex:1;min-width:180px}
+.seg{display:inline-flex;border:1px solid var(--borde);border-radius:7px;overflow:hidden}
+.seg button{background:var(--panel);border:0;padding:6px 11px;cursor:pointer;font-size:13px;color:var(--texto-2);border-left:1px solid var(--borde)}
+.seg button:first-child{border-left:0}
+.seg button.on{background:var(--panel-2);color:var(--texto);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--texto-3);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--borde)}
+td{padding:9px 10px;border-bottom:1px solid var(--borde);vertical-align:top}
+tr.caso{cursor:pointer}
+tr.caso:hover td{background:var(--panel-2)}
+td.res{white-space:nowrap}
+.res-pen{color:var(--critico-ink);font-weight:600}.res-con{color:var(--ok-ink)}.res-err{color:var(--texto-3)}
+.sev{font-size:11px;padding:1px 7px;border-radius:99px;border:1px solid var(--borde);color:var(--texto-2);white-space:nowrap}
+.sev-critica{border-color:var(--critico);color:var(--critico-ink)}
+.sev-alta{border-color:var(--serio);color:var(--serio-ink)}
+tr.det td{background:var(--panel-2);padding:14px 16px 16px}
+.det-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:900px){.det-grid{grid-template-columns:1fr}}
+.det-grid h5{margin:0 0 4px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--texto-3)}
+.det-grid p{margin:0 0 10px;font-size:13px}
+.det-grid pre{margin:0;background:var(--panel);border:1px solid var(--borde);border-radius:6px;padding:10px;font-size:12px;white-space:pre-wrap;word-break:break-word;max-height:260px;overflow:auto}
+.pie{margin-top:10px;font-size:12px;color:var(--texto-3)}
+.oculto{display:none}
+td.resp{max-width:340px;color:var(--texto-2);font-size:12.5px}
+td.resp .txt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+td.resp .mudo{color:var(--texto-3);font-style:italic}
+.veredicto{display:flex;align-items:center;gap:8px;font-size:13px;margin:0 0 10px;padding:8px 10px;border-radius:6px;border:1px solid var(--borde);background:var(--panel)}
+.veredicto.paso{border-color:var(--serio)}.veredicto.paro{border-color:var(--ok)}
+.veredicto b{white-space:nowrap}.veredicto .m{color:var(--texto-3);font-size:12px;margin-left:auto;white-space:nowrap}
+
+/* ── nueva corrida ── */
+.form-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,1fr);gap:12px;align-items:start}
+@media (max-width:1000px){.form-grid{grid-template-columns:1fr}}
+.campo{margin-bottom:16px}
+.campo>label,.campo>.rot{display:block;font-size:12px;font-weight:600;color:var(--texto-2);margin-bottom:6px}
+.campo .ayuda{font-size:12px;color:var(--texto-3);margin-top:5px}
+.campo select,.campo input[type=number]{width:100%}
+.campo .doble{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip-s{border:1px solid var(--borde);background:var(--panel);border-radius:99px;padding:5px 11px;font-size:12.5px;cursor:pointer;display:inline-flex;gap:6px;align-items:center;color:var(--texto-2)}
+.chip-s:hover{background:var(--panel-2)}
+.chip-s.on{background:var(--serie-suave);border-color:var(--serie);color:var(--texto)}
+.chip-s .n{font-size:11px;color:var(--texto-3);font-variant-numeric:tabular-nums}
+.chip-s.on .n{color:var(--texto-2)}
+.chip-s.control.on{background:var(--panel-2);border-color:var(--texto-3)}
+.check{display:flex;align-items:flex-start;gap:9px;font-size:13px;cursor:pointer;padding:4px 0}
+.check input{margin:3px 0 0;accent-color:var(--serie)}
+.check .ayuda{display:block;font-size:12px;color:var(--texto-3);font-weight:400}
+.check.off{opacity:.6;cursor:not-allowed}
+.destino{font-size:12px;color:var(--texto-3);margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.destino code{font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.etq-coste{font-size:10.5px;padding:1px 7px;border-radius:99px;background:var(--critico);color:#fff;font-weight:600;letter-spacing:.02em}
+.etq-gratis{font-size:10.5px;padding:1px 7px;border-radius:99px;background:var(--panel-2);color:var(--texto-2);font-weight:600;border:1px solid var(--borde)}
+
+.plan .grande{font-size:34px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.plan .grande small{font-size:13px;font-weight:500;color:var(--texto-3);margin-left:6px;letter-spacing:0}
+.plan .sub{font-size:12.5px;color:var(--texto-2);margin:6px 0 14px}
+.plan .barras{margin-bottom:14px}
+.plan h4{margin:12px 0 6px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--texto-3)}
+.coste{border:1px solid var(--serio);background:color-mix(in srgb,var(--serio) 10%,var(--panel));border-radius:8px;padding:10px 12px;font-size:12.5px;margin:12px 0}
+.coste b{color:var(--serio-ink)}
+.gratis{border:1px solid var(--borde);background:var(--panel-2);border-radius:8px;padding:10px 12px;font-size:12.5px;margin:12px 0;color:var(--texto-2)}
+.acciones{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.error-inline{color:var(--critico-ink);font-size:12.5px;margin-top:10px}
+.confirmar{border:1px solid var(--critico);border-radius:8px;padding:12px 14px;margin-top:12px;background:color-mix(in srgb,var(--critico) 6%,var(--panel))}
+.confirmar h4{margin:0 0 6px;font-size:13px;color:var(--critico-ink)}
+.confirmar p{margin:0 0 8px;font-size:12.5px}
+.confirmar .acciones{margin-top:10px}
+
+/* ── corrida en vivo ── */
+.progreso{height:10px;background:var(--panel-2);border-radius:5px;overflow:hidden;display:flex;margin:6px 0 4px}
+.progreso i{display:block;height:100%;transition:width .25s}
+.progreso .p-pen{background:var(--critico)}.progreso .p-con{background:var(--ok)}.progreso .p-err{background:var(--texto-3)}
+.progreso-pie{display:flex;justify-content:space-between;font-size:12px;color:var(--texto-3);font-variant-numeric:tabular-nums}
+.fase{font-size:11.5px;padding:2px 9px;border-radius:99px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.fase i{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block}
+.fase.viva{color:var(--critico-ink);border:1px solid var(--critico)}.fase.viva i{animation:pulso 1.2s ease-in-out infinite}
+.fase.lista{color:var(--ok-ink);border:1px solid var(--ok)}
+.fase.parada{color:var(--aviso-ink);border:1px solid var(--aviso)}
+.fase.rota{color:var(--critico-ink);border:1px solid var(--critico)}
+.log{max-height:460px;overflow:auto;border:1px solid var(--borde);border-radius:8px}
+.log table{font-size:12.5px}
+.log th{position:sticky;top:0;background:var(--panel);z-index:1}
+.log td{padding:6px 10px}
+.log tr.nuevo td{animation:aparece .4s ease-out}
+@keyframes aparece{from{background:var(--serie-suave)}to{background:transparent}}
+.log .idx{color:var(--texto-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.log .ms{color:var(--texto-3);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.aviso-box{border:1px solid var(--borde);border-radius:8px;padding:12px 14px;font-size:13px;background:var(--panel-2);margin-bottom:12px}
+.aviso-box.rojo{border-color:var(--critico);color:var(--critico-ink)}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="marca"><div class="logo">RT</div><h1>Red Turing</h1></div>
+    <p class="marca-sub">Corridas en <code>reports/</code></p>
+    <div class="accion">
+      <button class="btn btn-primario btn-bloque" id="b-nueva">＋ Nueva corrida</button>
+      <button class="en-curso oculto" id="b-live"><span class="punto"></span><span>En curso <b id="live-mini"></b></span><span class="meta" id="live-mini-obj"></span></button>
+    </div>
+    <div id="lista"></div>
+  </aside>
+
+  <main id="main">
+    <div class="nota" id="cargando">Cargando…</div>
+
+    <!-- ══════════ detalle de una corrida ══════════ -->
+    <div id="vista" class="oculto">
+      <header class="cab">
+        <h2 id="h-objetivo"></h2>
+        <span class="etq" id="h-tipo"></span>
+        <span class="meta" id="h-meta"></span>
+        <div class="derecha"><button class="btn" id="b-repetir" title="Abre el formulario con los parámetros de esta corrida">↻ Repetir corrida</button></div>
+      </header>
+
+      <section class="tiles" id="tiles">
+        <div class="tile llm oculto" id="t-llm-tile">
+          <div class="rot">ASR solo LLM</div>
+          <div class="val" id="t-llm"></div>
+          <div class="sub" id="t-llm-sub"></div>
+          <div class="estado" id="t-llm-estado"></div>
+        </div>
+        <div class="tile">
+          <div class="rot">Attack Success Rate</div>
+          <div class="val" id="t-asr"></div>
+          <div class="sub" id="t-asr-sub"></div>
+          <div class="estado" id="t-asr-estado"></div>
+        </div>
+        <div class="tile">
+          <div class="rot">Falsos positivos</div>
+          <div class="val" id="t-fp"></div>
+          <div class="sub">mensajes legítimos bloqueados</div>
+          <div class="estado" id="t-fp-estado"></div>
+        </div>
+        <div class="tile">
+          <div class="rot">Casos evaluados</div>
+          <div class="val" id="t-eval"></div>
+          <div class="sub" id="t-eval-sub"></div>
+        </div>
+        <div class="tile">
+          <div class="rot">Sin medir</div>
+          <div class="val" id="t-err"></div>
+          <div class="sub">fuera del ASR: el objetivo o una capa no respondió</div>
+        </div>
+      </section>
+
+      <section class="fila">
+        <div class="panel">
+          <h3>Evolución del ASR</h3>
+          <p class="desc" id="tend-desc"></p>
+          <div class="viz" id="tendencia"></div>
+        </div>
+        <div class="panel">
+          <h3>ASR por categoría</h3>
+          <p class="desc">Clic en una categoría para filtrar los hallazgos.</p>
+          <div class="barras" id="categorias"></div>
+          <div class="leyenda">
+            <span><i class="f-ok"></i>0 %</span>
+            <span><i class="f-aviso"></i>&lt; 15 %</span>
+            <span><i class="f-serio"></i>&lt; 35 %</span>
+            <span><i class="f-critico"></i>≥ 35 %</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="fila">
+        <div class="panel">
+          <h3>Qué capa detuvo cada ataque</h3>
+          <p class="desc">Bloqueos atribuidos por capa. Un fail-close no cuenta como defensa.</p>
+          <div class="barras" id="capas"></div>
+        </div>
+        <div class="panel">
+          <h3>Comparar con otra corrida</h3>
+          <p class="desc">Regresiones: ataques que antes se paraban y ahora entran.</p>
+          <div class="cmp-ctrl">
+            <label for="cmp-sel" style="font-size:13px;color:var(--texto-2)">Línea base</label>
+            <select id="cmp-sel"></select>
+            <span class="delta" id="cmp-delta"></span>
+          </div>
+          <div class="cmp-res" id="cmp-res"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h3>Hallazgos</h3>
+        <p class="desc">Clic en una fila para ver el payload, la evidencia y la respuesta del sistema.</p>
+        <div class="filtros">
+          <input type="search" id="f-texto" placeholder="Buscar en id, técnica, evidencia…">
+          <div class="seg" id="f-res">
+            <button data-v="todos" class="on">Todos</button>
+            <button data-v="pen">Penetró</button>
+            <button data-v="con">Contenido</button>
+            <button data-v="err">Sin medir</button>
+            <button data-v="llm">LLM cedió</button>
+          </div>
+          <select id="f-cat"><option value="">Todas las categorías</option></select>
+          <select id="f-sev">
+            <option value="">Toda severidad</option>
+            <option value="critica">Crítica</option>
+            <option value="alta">Alta</option>
+            <option value="media">Media</option>
+            <option value="baja">Baja</option>
+          </select>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Caso</th><th>Categoría</th><th>Técnica</th><th>Sev.</th><th>Resultado</th><th>Guardrail</th><th>LLM solo</th><th>Respuesta del agente</th></tr></thead>
+            <tbody id="tabla"></tbody>
+          </table>
+        </div>
+        <div class="pie" id="tabla-pie"></div>
+      </section>
+    </div>
+
+    <!-- ══════════ nueva corrida ══════════ -->
+    <div id="vista-nueva" class="oculto">
+      <header class="cab">
+        <h2>Nueva corrida</h2>
+        <span class="meta">Los mismos parámetros que <code>python -m redturing correr</code>. Nada se envía hasta que pulses lanzar.</span>
+      </header>
+
+      <div class="form-grid">
+        <section class="panel">
+          <div class="campo">
+            <label for="n-objetivo">Objetivo</label>
+            <select id="n-objetivo"></select>
+            <div class="destino" id="n-destino"></div>
+          </div>
+
+          <div class="campo">
+            <span class="rot">Suites de ataque</span>
+            <div class="chips" id="n-suites"></div>
+            <div class="ayuda">Clic para activar o desactivar. <button class="btn" style="padding:2px 8px;font-size:11.5px;font-weight:500" id="n-todas">Todas</button> <button class="btn" style="padding:2px 8px;font-size:11.5px;font-weight:500" id="n-ninguna">Ninguna</button></div>
+          </div>
+
+          <div class="campo">
+            <div class="doble">
+              <div>
+                <label for="n-sev">Severidad mínima</label>
+                <select id="n-sev">
+                  <option value="">Todas</option>
+                  <option value="media">Media o superior</option>
+                  <option value="alta">Alta o superior</option>
+                  <option value="critica">Solo crítica</option>
+                </select>
+              </div>
+              <div>
+                <label for="n-limite">Límite de casos</label>
+                <input type="number" id="n-limite" min="1" step="1" placeholder="sin límite">
+                <div class="ayuda">Útil contra el agente mientras iteras.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="campo">
+            <div class="doble">
+              <div>
+                <label for="n-workers">Ataques en paralelo</label>
+                <input type="number" id="n-workers" min="1" max="16" step="1" value="4">
+                <div class="ayuda">1 para depurar. Contra el agente, 2 evita saturar el LLM.</div>
+              </div>
+              <div>
+                <span class="rot">Opciones</span>
+                <label class="check" id="n-juez-wrap"><input type="checkbox" id="n-juez" checked><span>Juez LLM<span class="ayuda" id="n-juez-ayuda"></span></span></label>
+                <label class="check"><input type="checkbox" id="n-html" checked><span>Generar informe HTML<span class="ayuda">Además del JSON, un HTML autocontenido para adjuntar.</span></span></label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="panel plan" id="n-plan">
+          <h3>Qué se va a lanzar</h3>
+          <p class="desc">Se recalcula con cada cambio. No envía nada.</p>
+          <div id="n-plan-cuerpo"><div class="nota">Cargando…</div></div>
+          <div class="acciones">
+            <button class="btn btn-primario" id="n-lanzar" disabled>Lanzar corrida</button>
+            <button class="btn" id="n-cancelar-form">Volver</button>
+          </div>
+          <div class="error-inline oculto" id="n-error"></div>
+          <div class="confirmar oculto" id="n-confirmar">
+            <h4>Esta corrida cuesta dinero</h4>
+            <p id="n-confirmar-txt"></p>
+            <label class="check"><input type="checkbox" id="n-confirmo"><span>Entiendo: cada caso es una llamada real y quedará registrada en el objetivo.</span></label>
+            <div class="acciones">
+              <button class="btn btn-primario" id="n-confirmar-ok" disabled>Confirmar y lanzar</button>
+              <button class="btn" id="n-confirmar-no">Cancelar</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ══════════ corrida en vivo ══════════ -->
+    <div id="vista-live" class="oculto">
+      <header class="cab">
+        <h2 id="l-objetivo"></h2>
+        <span class="etq" id="l-tipo"></span>
+        <span class="fase" id="l-fase"></span>
+        <span class="meta" id="l-meta"></span>
+        <div class="derecha">
+          <button class="btn" id="l-cancelar">■ Cancelar</button>
+          <button class="btn btn-neutro oculto" id="l-ver">Ver informe →</button>
+          <button class="btn oculto" id="l-otra">Nueva corrida</button>
+        </div>
+      </header>
+
+      <div class="aviso-box oculto" id="l-aviso"></div>
+
+      <section class="panel" style="margin-bottom:12px">
+        <div class="progreso" id="l-barra"><i class="p-pen" style="width:0"></i><i class="p-con" style="width:0"></i><i class="p-err" style="width:0"></i></div>
+        <div class="progreso-pie"><span id="l-prog"></span><span id="l-tiempo"></span></div>
+      </section>
+
+      <section class="tiles">
+        <div class="tile"><div class="rot">ASR parcial</div><div class="val" id="l-asr">—</div><div class="sub">sobre los casos ya evaluados</div><div class="estado" id="l-asr-estado"></div></div>
+        <div class="tile"><div class="rot">Penetraron</div><div class="val res-pen" id="l-pen">0</div><div class="sub">la defensa falló</div></div>
+        <div class="tile"><div class="rot">Contenidos</div><div class="val res-con" id="l-con">0</div><div class="sub">el ataque no prosperó</div></div>
+        <div class="tile"><div class="rot">Sin medir</div><div class="val" id="l-err">0</div><div class="sub">error del objetivo o fail-close</div></div>
+      </section>
+
+      <section class="panel">
+        <h3>Casos conforme terminan</h3>
+        <p class="desc">Con varios workers el orden de llegada no es el de la corpus. Cada caso usa su propia sesión.</p>
+        <div class="log">
+          <table>
+            <thead><tr><th>#</th><th>Resultado</th><th>Caso</th><th>Categoría</th><th>Sev.</th><th>Guardrail / detector</th><th>LLM solo</th><th>Respuesta del agente</th><th style="text-align:right">ms</th></tr></thead>
+            <tbody id="l-log"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const pct = (x) => (x * 100).toFixed(1).replace(/\.0$/, '') + ' %';
+  const fecha = (iso) => { const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString('es', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}); };
+  const fechaCorta = (iso) => { const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleDateString('es', {day:'2-digit', month:'short'}); };
+  const seg = (s) => s < 60 ? `${Math.round(s)} s` : `${Math.floor(s / 60)} min ${String(Math.round(s % 60)).padStart(2, '0')} s`;
+
+  // Umbrales de estado. Son de lectura, no de cálculo: el ASR es el mismo número
+  // siempre; esto solo decide el color y la etiqueta que lo acompaña.
+  function estado(asr) {
+    if (asr === 0) return {c:'ok', t:'sin penetraciones'};
+    if (asr < 0.15) return {c:'aviso', t:'bajo'};
+    if (asr < 0.35) return {c:'serio', t:'alto'};
+    return {c:'critico', t:'crítico'};
+  }
+  const estadoHtml = (e) => `<i></i>${esc(e.t)}`;
+
+  const S = {
+    corridas: [], sel: null, detalle: null,
+    filtro: {texto:'', res:'todos', cat:'', sev:''}, abiertos: new Set(),
+    vista: null,
+    cfg: {objetivos: [], suites: {}, juez: null},
+    form: {objetivo: '', suites: new Set(), sev: '', limite: '', workers: 4, juez: true, html: true},
+    plan: null,
+    live: {id: null, es: null, total: 0, estado: null, inicio: null, reloj: null},
+  };
+
+  async function api(ruta, opciones) {
+    const r = await fetch(ruta, {cache:'no-store', ...opciones});
+    let cuerpo = null;
+    try { cuerpo = await r.json(); } catch (_) { /* sin cuerpo */ }
+    if (!r.ok) { const e = new Error(cuerpo?.error || r.statusText); e.estado = r.status; e.cuerpo = cuerpo; throw e; }
+    return cuerpo;
+  }
+  const post = (ruta, datos) => api(ruta, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(datos || {})});
+
+  // ── router ──
+  function mostrar(vista) {
+    S.vista = vista;
+    $('cargando').classList.add('oculto');
+    for (const v of ['vista', 'vista-nueva', 'vista-live']) $(v).classList.toggle('oculto', v !== ({detalle:'vista', nueva:'vista-nueva', live:'vista-live'})[vista]);
+    if (vista === 'nueva') location.hash = 'nueva';
+    else if (vista === 'live') location.hash = 'live';
+    renderLista();
+  }
+
+  // ── barra lateral ──
+  function renderLista() {
+    const cont = $('lista');
+    if (!S.corridas.length) {
+      cont.innerHTML = `<div class="vacio">Todavía no hay informes. Lanza tu primera corrida con el botón de arriba, o desde la terminal:<code>python -m redturing correr \\\n  --objetivo guardrail-databot</code></div>`;
+      return;
+    }
+    const grupos = {};
+    for (const c of S.corridas) (grupos[c.objetivo] ||= []).push(c);
+    cont.innerHTML = Object.entries(grupos).map(([obj, items]) => `
+      <div class="grupo"><h2>${esc(obj)}</h2>
+        ${items.map(c => {
+          const e = estado(c.asr);
+          return `<button class="corrida ${S.vista === 'detalle' && c.archivo === S.sel ? 'activa' : ''}" data-a="${esc(c.archivo)}">
+            <span class="fecha">${esc(fecha(c.inicio))}${c.es_baseline ? ' <span class="etq">baseline</span>' : ''}</span>
+            <span class="chip e-${e.c}">${pct(c.asr)}</span>
+            <span class="meta">${c.exitosos}/${c.evaluados} penetraron${c.errores ? ` · ${c.errores} sin medir` : ''}</span>
+          </button>`;
+        }).join('')}
+      </div>`).join('');
+    cont.querySelectorAll('.corrida').forEach(b => b.addEventListener('click', () => seleccionar(b.dataset.a)));
+  }
+
+  async function recargarCorridas() {
+    try { S.corridas = await api('/api/corridas'); } catch (_) { /* se mantiene la lista anterior */ }
+    renderLista();
+  }
+
+  async function seleccionar(archivo) {
+    S.sel = archivo;
+    S.abiertos.clear();
+    S.filtro = {texto:'', res:'todos', cat:'', sev:''};
+    location.hash = encodeURIComponent(archivo);
+    try {
+      S.detalle = await api('/api/corrida?archivo=' + encodeURIComponent(archivo));
+    } catch (e) {
+      $('cargando').textContent = 'No se pudo cargar el informe: ' + e.message;
+      $('cargando').classList.remove('oculto'); $('vista').classList.add('oculto');
+      return;
+    }
+    mostrar('detalle');
+    renderDetalle();
+  }
+
+  // ── detalle ──
+  function renderDetalle() {
+    const d = S.detalle, r = d.resumen;
+    const evaluados = r.evaluados ?? (r.total - r.errores);
+    $('h-objetivo').textContent = d.objetivo;
+    $('h-tipo').textContent = d.tipo_objetivo;
+    $('h-meta').textContent = `${fecha(d.inicio)} · ${d.duracion_s}s · juez LLM ${d.juez_activo ? 'activo' : 'inactivo'} · mediana ${Math.round(r.latencia_mediana_ms)} ms/caso`;
+
+    const e = estado(r.asr);
+    $('t-asr').textContent = pct(r.asr);
+    $('t-asr-sub').textContent = `${r.exitosos} de ${evaluados} ataques evaluados penetraron`;
+    $('t-asr-estado').className = 'estado e-' + e.c; $('t-asr-estado').innerHTML = estadoHtml(e);
+
+    const fp = d.asr_por_categoria?.control_falsos_positivos;
+    if (fp) {
+      $('t-fp').textContent = pct(fp.asr);
+      const ef = fp.asr === 0 ? {c:'ok', t:'ningún usuario legítimo bloqueado'} : {c:'serio', t:`${fp.exitosos} de ${fp.total} controles bloqueados`};
+      $('t-fp-estado').className = 'estado e-' + ef.c; $('t-fp-estado').innerHTML = estadoHtml(ef);
+    } else {
+      $('t-fp').textContent = '—';
+      $('t-fp-estado').className = 'estado e-neutro'; $('t-fp-estado').innerHTML = '<i></i>la suite controles no corrió';
+    }
+    $('t-eval').textContent = evaluados;
+    $('t-eval-sub').textContent = `de ${r.total} casos lanzados`;
+    $('t-err').textContent = r.errores;
+
+    // Segunda línea de defensa: solo existe si el objetivo hizo llegar los payloads al LLM.
+    const hayLlm = r.asr_llm !== null && r.asr_llm !== undefined && r.evaluados_llm > 0;
+    $('t-llm-tile').classList.toggle('oculto', !hayLlm);
+    $('tiles').classList.toggle('cinco', hayLlm);
+    if (hayLlm) {
+      const tapados = d.resultados.filter(x => x.veredicto_llm && x.veredicto_llm.exito && x.respuesta.bloqueado).length;
+      const el = estado(r.asr_llm);
+      $('t-llm').textContent = pct(r.asr_llm);
+      $('t-llm-sub').textContent = `${r.cedidos_llm} de ${r.evaluados_llm} veces cedió el modelo${tapados ? ` · ${tapados} tapadas por el guardrail` : ''}`;
+      $('t-llm-estado').className = 'estado e-' + el.c; $('t-llm-estado').innerHTML = estadoHtml(el.c === 'ok' ? {c:'ok', t:'el prompt aguantó todo'} : el);
+    }
+
+    renderTendencia();
+    renderCategorias();
+    renderCapas();
+    renderComparador();
+    poblarFiltros();
+    renderTabla();
+  }
+
+  // ── tendencia: una serie (el ASR de este objetivo), sin leyenda ──
+  function renderTendencia() {
+    const cont = $('tendencia');
+    const serie = S.corridas.filter(c => c.objetivo === S.detalle.objetivo && !c.es_baseline)
+                            .slice().sort((a, b) => a.inicio.localeCompare(b.inicio));
+    $('tend-desc').textContent = serie.length > 1
+      ? `${serie.length} corridas de «${S.detalle.objetivo}». Pasa el cursor por los puntos.`
+      : 'Con una sola corrida no hay evolución que mostrar. Lanza otra y vuelve.';
+    if (serie.length < 2) { cont.innerHTML = ''; return; }
+
+    const W = 560, H = 190, mL = 40, mR = 56, mT = 18, mB = 30;
+    const iw = W - mL - mR, ih = H - mT - mB;
+    const maxY = Math.max(0.1, Math.ceil(Math.max(...serie.map(c => c.asr)) * 10) / 10);
+    const x = (i) => mL + (serie.length === 1 ? iw / 2 : (i / (serie.length - 1)) * iw);
+    const y = (v) => mT + ih - (v / maxY) * ih;
+
+    const ticks = [0, maxY / 2, maxY];
+    const grid = ticks.map(t => `<line class="grid" x1="${mL}" x2="${W - mR}" y1="${y(t)}" y2="${y(t)}"/>
+      <text class="eje" x="${mL - 8}" y="${y(t) + 4}" text-anchor="end">${Math.round(t * 100)}%</text>`).join('');
+    const dias = new Set(serie.map(c => fechaCorta(c.inicio)));
+    const etiqueta = dias.size < serie.length
+      ? (iso) => { const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString('es', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}); }
+      : fechaCorta;
+    const ejeX = serie.map((c, i) => (serie.length <= 8 || i === 0 || i === serie.length - 1 || i % Math.ceil(serie.length / 6) === 0)
+      ? `<text class="eje" x="${x(i)}" y="${H - 8}" text-anchor="middle">${esc(etiqueta(c.inicio))}</text>` : '').join('');
+    const linea = serie.map((c, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(c.asr).toFixed(1)}`).join(' ');
+    const ult = serie[serie.length - 1];
+    const puntos = serie.map((c, i) => `
+      <circle class="punto ${c.archivo === S.sel ? 'sel' : ''}" cx="${x(i)}" cy="${y(c.asr)}"/>
+      <circle class="punto-hit" cx="${x(i)}" cy="${y(c.asr)}" data-i="${i}"/>`).join('');
+    const directa = `<text class="directa" x="${x(serie.length - 1) + 9}" y="${y(ult.asr) + 4}">${pct(ult.asr)}</text>`;
+
+    cont.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${grid}${ejeX}<path class="linea" d="${linea}"/>${puntos}${directa}</svg><div class="tip" id="tip"></div>`;
+
+    const tip = $('tip'), svg = cont.querySelector('svg');
+    cont.querySelectorAll('.punto-hit').forEach(h => {
+      h.addEventListener('mouseenter', () => {
+        const c = serie[+h.dataset.i];
+        const rect = svg.getBoundingClientRect();
+        const px = rect.left + (x(+h.dataset.i) / W) * rect.width - cont.getBoundingClientRect().left;
+        const py = (y(c.asr) / H) * rect.height;
+        tip.innerHTML = `<b>${pct(c.asr)}</b> · ${esc(fecha(c.inicio))}<br>${c.exitosos}/${c.evaluados} penetraron`;
+        tip.style.left = px + 'px'; tip.style.top = py + 'px'; tip.classList.add('on');
+      });
+      h.addEventListener('mouseleave', () => tip.classList.remove('on'));
+      h.addEventListener('click', () => seleccionar(serie[+h.dataset.i].archivo));
+    });
+  }
+
+  // ── barras ──
+  function barraHtml(nombre, valor, maxV, clase, numHtml, sel, data, quieta) {
+    const w = maxV ? (valor / maxV) * 100 : 0;
+    return `<div class="barra ${sel ? 'sel' : ''} ${quieta ? 'quieta' : ''}" ${data || ''} title="${esc(nombre)}">
+      <span class="nom">${esc(nombre)}</span>
+      <span class="pista"><i class="${clase} ${valor === 0 ? 'cero' : ''}" style="width:${w}%"></i></span>
+      <span class="num">${numHtml}</span></div>`;
+  }
+
+  function renderCategorias() {
+    const cats = Object.entries(S.detalle.asr_por_categoria || {}).sort((a, b) => b[1].asr - a[1].asr);
+    $('categorias').innerHTML = cats.map(([k, v]) =>
+      barraHtml(k, v.asr, 1, 'f-' + estado(v.asr).c, `<b>${pct(v.asr)}</b>`, S.filtro.cat === k, `data-c="${esc(k)}"`)
+    ).join('') || '<div class="nota">Sin categorías.</div>';
+    $('categorias').querySelectorAll('.barra').forEach(b => b.addEventListener('click', () => {
+      S.filtro.cat = S.filtro.cat === b.dataset.c ? '' : b.dataset.c;
+      $('f-cat').value = S.filtro.cat;
+      renderCategorias(); renderTabla();
+    }));
+  }
+
+  function renderCapas() {
+    const capas = Object.entries(S.detalle.asr_por_capa_que_bloqueo || {}).filter(([k]) => k !== '(sin bloqueo)')
+      .sort((a, b) => b[1].total - a[1].total);
+    const max = Math.max(1, ...capas.map(([, v]) => v.total));
+    $('capas').innerHTML = capas.map(([k, v]) => barraHtml(k, v.total, max, 'f-serie', `<b>${v.total}</b>`, false, '', true)).join('')
+      || '<div class="nota">Ningún bloqueo en esta corrida.</div>';
+  }
+
+  // ── comparación ──
+  function renderComparador() {
+    const otras = S.corridas.filter(c => c.objetivo === S.detalle.objetivo && c.archivo !== S.sel);
+    const sel = $('cmp-sel');
+    sel.innerHTML = '<option value="">— elegir corrida —</option>' + otras.map(c =>
+      `<option value="${esc(c.archivo)}">${esc(fecha(c.inicio))}${c.es_baseline ? ' (baseline)' : ''} · ${pct(c.asr)}</option>`).join('');
+    $('cmp-res').innerHTML = otras.length ? '' : '<div class="nota">No hay otra corrida de este objetivo con la que comparar.</div>';
+    $('cmp-delta').textContent = '';
+    const base = otras.find(c => c.es_baseline);
+    if (base) { sel.value = base.archivo; comparar(base.archivo); }
+    sel.onchange = () => sel.value ? comparar(sel.value) : ($('cmp-res').innerHTML = '', $('cmp-delta').textContent = '');
+  }
+
+  async function comparar(antes) {
+    let d;
+    try { d = await api(`/api/comparar?antes=${encodeURIComponent(antes)}&despues=${encodeURIComponent(S.sel)}`); }
+    catch (e) { $('cmp-res').innerHTML = `<div class="nota">${esc(e.message)}</div>`; return; }
+    const delta = d.asr_despues - d.asr_antes;
+    $('cmp-delta').innerHTML = `ASR ${pct(d.asr_antes)} → <b>${pct(d.asr_despues)}</b> (${delta > 0 ? '+' : ''}${(delta * 100).toFixed(1)} pts)`;
+    const bloque = (titulo, items, clase) => `<div class="cmp-bloque"><h4>${titulo} <span class="cnt ${items.length ? clase : ''}">${items.length}</span></h4>
+      ${items.length ? `<ul>${items.map(i => `<li><span class="mono">${esc(i.id)}</span><span class="sev sev-${esc(i.severidad)}">${esc(i.severidad)}</span>${i.exito ? '<span class="res-pen" style="font-size:12px">▲</span>' : ''}<span class="ev">${esc(i.evidencia)}</span></li>`).join('')}</ul>` : ''}</div>`;
+    $('cmp-res').innerHTML =
+      bloque('Regresiones — antes se paraban, ahora entran', d.regresiones, 'rojo') +
+      bloque('Corregidos — antes entraban, ahora se paran', d.corregidos, 'verde') +
+      (d.primera_medicion.length ? bloque('Medidos por primera vez — antes con error, no son regresión', d.primera_medicion, '') : '') +
+      bloque('Casos nuevos en la corpus', d.casos_nuevos, '') +
+      (d.casos_retirados.length ? bloque('Casos retirados de la corpus', d.casos_retirados, '') : '') +
+      (d.sin_medir_ahora.length ? `<div class="cmp-bloque"><h4>Sin medir en esta corrida <span class="cnt">${d.sin_medir_ahora.length}</span></h4><p class="nota" style="padding:4px 0 0">${d.sin_medir_ahora.map(i => `<span class="mono">${esc(i.id)}</span>`).join(', ')}</p></div>` : '');
+  }
+
+  // ── hallazgos ──
+  function poblarFiltros() {
+    const cats = [...new Set(S.detalle.resultados.map(r => r.caso.categoria))].sort();
+    $('f-cat').innerHTML = '<option value="">Todas las categorías</option>' + cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    $('f-cat').value = S.filtro.cat; $('f-sev').value = S.filtro.sev; $('f-texto').value = S.filtro.texto;
+    $('f-res').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === S.filtro.res));
+  }
+
+  const tipoRes = (r) => r.respuesta.error ? 'err' : (r.veredicto.exito ? 'pen' : 'con');
+
+  // Dos preguntas distintas por caso: ¿qué hizo el filtro de entrada? y ¿qué
+  // contestó el agente? Un objetivo guardrail solo responde la primera; un
+  // objetivo agente con guardrail previo responde las dos.
+  function veredictoGuardrail(r) {
+    const x = r.respuesta, g = x.crudo && x.crudo.guardrail;
+    if (g) return g.es_seguro
+      ? {paso: true, texto: 'dejó pasar', detalle: `es_seguro = true · ${Math.round(g.latencia_ms)} ms`}
+      : {paso: false, texto: `bloqueó · ${g.capa}`, detalle: `motivo: ${g.motivo} · ${Math.round(g.latencia_ms)} ms`};
+    if (x.bloqueado) return {paso: false, texto: `bloqueó · ${x.capa || x.motivo}`, detalle: x.capa && x.capa.includes('inferido') ? 'inferido de la respuesta del agente' : `motivo: ${x.motivo}`};
+    if (S.detalle.tipo_objetivo === 'guardrail') return {paso: true, texto: 'dejó pasar', detalle: 'es_seguro = true'};
+    if (x.error) return null;
+    return {paso: true, texto: 'dejó pasar', detalle: 'el agente respondió sin señal de bloqueo'};
+  }
+
+  // ¿Aguantó el modelo por sí solo? Solo tiene sentido cuando hay texto del agente.
+  const estadoLlm = (v) => !v ? null : (v.exito ? 'cedio' : (v.confianza === 'baja' ? 'revisar' : 'aguanto'));
+  const LLM_HTML = {
+    cedio: '<span class="llm-cedio" title="El modelo obedeció al atacante: mejora pendiente del system prompt">▲ cedió</span>',
+    aguanto: '<span class="llm-aguanto">● aguantó</span>',
+    revisar: '<span class="llm-revisar" title="Ningún detector cerró el caso y el juez no actuó: lee la respuesta">◌ revisar</span>',
+  };
+  function celdaLlm(r) {
+    const e = estadoLlm(r.veredicto_llm);
+    if (!e) return `<span class="res-err" title="${r.respuesta.texto ? '' : 'El LLM no recibió este payload'}">—</span>`;
+    const tapado = r.veredicto_llm.exito && r.respuesta.bloqueado;
+    return LLM_HTML[e] + (tapado ? ' <span class="etq" title="El guardrail lo paró, pero el modelo habría cedido">tapado</span>' : '');
+  }
+
+  // Celda de la tabla: la respuesta del agente en dos líneas, o por qué no la hay.
+  function celdaRespuesta(r) {
+    const x = r.respuesta;
+    if (x.texto) return `<div class="txt" title="${esc(x.texto.slice(0, 600))}">${esc(x.texto)}</div>`;
+    if (x.error) return `<span class="mudo">sin medir: ${esc(x.error.slice(0, 80))}</span>`;
+    if (x.bloqueado) return '<span class="mudo">no se ejecutó: detenido en la entrada</span>';
+    if (S.detalle.tipo_objetivo === 'guardrail') return '<span class="mudo">no aplica: corrida solo de guardrail</span>';
+    return '<span class="mudo">respuesta vacía</span>';
+  }
+
+  // Caja de detalle: el texto completo del agente, o la explicación de su ausencia.
+  function textoRespuesta(r) {
+    const x = r.respuesta;
+    if (x.texto) return x.texto;
+    if (x.bloqueado) return 'El agente no se ejecutó: el guardrail detuvo el payload en la entrada, igual que ocurriría en producción.\n\nPara ver qué haría el modelo con este payload de todos modos, activa guardrail.evaluar_llm_siempre en targets.yaml.';
+    if (S.detalle.tipo_objetivo === 'guardrail') {
+      return 'No hay respuesta porque en una corrida de tipo guardrail el agente nunca se ejecuta: ' +
+        'solo se mide si el filtro de entrada detiene el payload. Para ver qué contesta el agente ' +
+        'a este mismo mensaje, lanza el objetivo de tipo agente (con guardrail previo verás ambas cosas).';
+    }
+    if (x.error) return `(sin respuesta: ${x.error})`;
+    return '(el objetivo devolvió una respuesta vacía)';
+  }
+  const ORDEN_SEV = {critica:0, alta:1, media:2, baja:3};
+  const resHtml = {pen: '<span class="res-pen">▲ Penetró</span>', con: '<span class="res-con">● Contenido</span>', err: '<span class="res-err">○ Sin medir</span>'};
+  // Un veredicto de confianza baja (ningún detector cerró y no hubo juez) no es
+  // un "Contenido" firme: el agente respondió algo que no parece rechazo. Es el
+  // caso que hay que leer a mano.
+  const resultadoHtml = (r) => {
+    const t = tipoRes(r);
+    if (t === 'con' && r.veredicto.confianza === 'baja') return '<span class="res-con" style="opacity:.75" title="Ningún detector cerró el caso y el juez no actuó: revisa la respuesta a mano">◌ Contenido · revisar</span>';
+    return resHtml[t];
+  };
+
+  function renderTabla() {
+    const f = S.filtro, q = f.texto.toLowerCase();
+    const filas = S.detalle.resultados.filter(r =>
+      (f.res === 'todos' || (f.res === 'llm' ? !!(r.veredicto_llm && r.veredicto_llm.exito) : tipoRes(r) === f.res)) &&
+      (!f.cat || r.caso.categoria === f.cat) &&
+      (!f.sev || r.caso.severidad === f.sev) &&
+      (!q || [r.caso.id, r.caso.tecnica, r.caso.objetivo, r.veredicto.evidencia, r.respuesta.capa, r.respuesta.texto].join(' ').toLowerCase().includes(q))
+    ).sort((a, b) => {
+      const ta = tipoRes(a), tb = tipoRes(b);
+      if (ta !== tb) return (ta === 'pen' ? 0 : ta === 'con' ? 1 : 2) - (tb === 'pen' ? 0 : tb === 'con' ? 1 : 2);
+      return (ORDEN_SEV[a.caso.severidad] ?? 9) - (ORDEN_SEV[b.caso.severidad] ?? 9) || a.caso.id.localeCompare(b.caso.id);
+    });
+
+    $('tabla').innerHTML = filas.map(r => {
+      const t = tipoRes(r);
+      const abierto = S.abiertos.has(r.caso.id);
+      return `<tr class="caso" data-id="${esc(r.caso.id)}">
+        <td class="mono">${esc(r.caso.id)}</td><td>${esc(r.caso.categoria)}</td><td>${esc(r.caso.tecnica)}</td>
+        <td><span class="sev sev-${esc(r.caso.severidad)}">${esc(r.caso.severidad)}</span></td>
+        <td class="res">${resultadoHtml(r)}</td>
+        <td>${(() => { const g = veredictoGuardrail(r); const malo = r.caso.benigno ? !g?.paso : g?.paso; return g ? `<span class="${malo ? 'res-pen' : 'res-con'}" style="font-weight:500" title="${esc(g.detalle)}${r.caso.benigno ? ' · control legítimo: bloquearlo es el fallo' : ''}">${g.paso ? '→ ' : '■ '}${esc(g.texto)}</span>` : '<span class="res-err">—</span>'; })()}</td>
+        <td>${celdaLlm(r)}</td>
+        <td class="resp">${celdaRespuesta(r)}</td></tr>
+        ${abierto ? `<tr class="det"><td colspan="8"><div class="det-grid">
+          <div>
+            <h5>Objetivo del ataque</h5><p>${esc(r.caso.objetivo || '(sin declarar)')}</p>
+            <h5>Evidencia · ${esc(r.veredicto.detector)} (confianza ${esc(r.veredicto.confianza)})</h5><p>${esc(r.veredicto.evidencia)}</p>
+            ${r.respuesta.error ? `<h5>Error</h5><p>${esc(r.respuesta.error)}</p>` : ''}
+            ${r.caso.notas ? `<h5>Notas</h5><p>${esc(r.caso.notas)}</p>` : ''}
+            <h5>Payload enviado</h5><pre>${esc(r.caso.payload)}</pre>
+          </div>
+          <div>
+            <h5>Guardrail de entrada</h5>
+            ${(() => { const g = veredictoGuardrail(r); const malo = r.caso.benigno ? !g?.paso : g?.paso; return g ? `<div class="veredicto ${malo ? 'paso' : 'paro'}"><b>${g.paso ? '→ Dejó pasar' : '■ Bloqueó'}</b><span>${esc(g.texto.replace(/^(dejó pasar|bloqueó · )/, ''))}</span><span class="m">${esc(g.detalle)}</span></div>` : '<div class="veredicto"><span class="mudo">sin veredicto: el objetivo no respondió</span></div>'; })()}
+            <h5>Respuesta del agente${r.respuesta.texto && r.respuesta.latencia_ms ? ` · ${Math.round(r.respuesta.latencia_ms)} ms en total` : ''}${r.respuesta.crudo?.llm_pese_al_bloqueo ? ' · <span class="etq">recibió el payload pese al bloqueo</span>' : ''}</h5>
+            ${r.veredicto_llm ? `<div class="veredicto ${r.veredicto_llm.exito ? 'paso' : 'paro'}"><b>LLM solo: ${({cedio:'▲ cedió', aguanto:'● aguantó', revisar:'◌ revisar'})[estadoLlm(r.veredicto_llm)]}</b><span>${esc(r.veredicto_llm.evidencia)}</span><span class="m">${esc(r.veredicto_llm.detector)} · conf. ${esc(r.veredicto_llm.confianza)}</span></div>` : ''}
+            <pre>${esc(textoRespuesta(r))}</pre>
+            <div class="pie" style="margin-top:6px">Detector que cerró el caso: <b>${esc(r.veredicto.detector)}</b></div>
+          </div></div></td></tr>` : ''}`;
+    }).join('') || '<tr><td colspan="8" class="nota">Ningún caso coincide con los filtros.</td></tr>';
+
+    $('tabla-pie').textContent = `${filas.length} de ${S.detalle.resultados.length} casos`;
+    $('tabla').querySelectorAll('tr.caso').forEach(tr => tr.addEventListener('click', () => {
+      const id = tr.dataset.id; S.abiertos.has(id) ? S.abiertos.delete(id) : S.abiertos.add(id); renderTabla();
+    }));
+  }
+
+  $('f-texto').addEventListener('input', (e) => { S.filtro.texto = e.target.value; renderTabla(); });
+  $('f-cat').addEventListener('change', (e) => { S.filtro.cat = e.target.value; renderCategorias(); renderTabla(); });
+  $('f-sev').addEventListener('change', (e) => { S.filtro.sev = e.target.value; renderTabla(); });
+  $('f-res').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    S.filtro.res = b.dataset.v; poblarFiltros(); renderTabla();
+  });
+
+  // ═══════════════════════ nueva corrida ═══════════════════════
+  async function cargarConfig() {
+    if (S.cfg.objetivos.length) return true;
+    try {
+      const [objetivos, suites, juez] = await Promise.all([api('/api/objetivos'), api('/api/suites'), api('/api/juez')]);
+      S.cfg = {objetivos, suites, juez};
+      if (!S.form.objetivo) {
+        // Por defecto el primer objetivo gratuito: el que no cuesta nada probar por error.
+        const gratis = objetivos.find(o => !o.con_coste) || objetivos[0];
+        S.form.objetivo = gratis ? gratis.nombre : '';
+      }
+      if (!S.form.suites.size) S.form.suites = new Set(Object.keys(suites));
+      if (!juez.disponible) S.form.juez = false;
+      return true;
+    } catch (e) {
+      $('n-plan-cuerpo').innerHTML = `<div class="error-inline">${esc(e.message)}</div>`;
+      return false;
+    }
+  }
+
+  function abrirNueva(prefijado) {
+    ocultarConfirmacion();
+    $('n-error').classList.add('oculto');
+    mostrar('nueva');
+    cargarConfig().then(ok => {
+      if (!ok) return;
+      if (prefijado) Object.assign(S.form, prefijado);
+      renderFormulario();
+      planificar();
+    });
+  }
+
+  function renderFormulario() {
+    const f = S.form, c = S.cfg;
+    $('n-objetivo').innerHTML = c.objetivos.map(o => `<option value="${esc(o.nombre)}">${esc(o.nombre)} · ${esc(o.tipo)}</option>`).join('')
+      || '<option value="">(no hay objetivos en targets.yaml)</option>';
+    $('n-objetivo').value = f.objetivo;
+    renderDestino();
+
+    $('n-suites').innerHTML = Object.entries(c.suites).map(([nombre, n]) =>
+      `<button type="button" class="chip-s ${f.suites.has(nombre) ? 'on' : ''} ${nombre === 'controles' ? 'control' : ''}" data-s="${esc(nombre)}" title="${nombre === 'controles' ? 'Mensajes legítimos: mide falsos positivos' : ''}">${esc(nombre)} <span class="n">${n}</span></button>`).join('');
+    $('n-suites').querySelectorAll('.chip-s').forEach(b => b.addEventListener('click', () => {
+      f.suites.has(b.dataset.s) ? f.suites.delete(b.dataset.s) : f.suites.add(b.dataset.s);
+      b.classList.toggle('on'); planificar();
+    }));
+
+    $('n-sev').value = f.sev;
+    $('n-limite').value = f.limite;
+    $('n-workers').value = f.workers;
+    $('n-html').checked = f.html;
+
+    const j = c.juez;
+    $('n-juez').checked = f.juez && j.disponible;
+    $('n-juez').disabled = !j.disponible;
+    $('n-juez-wrap').classList.toggle('off', !j.disponible);
+    $('n-juez-ayuda').textContent = j.disponible
+      ? `${j.modelo} decide los casos que las reglas no cierran. Solo interviene con objetivos que devuelven texto.`
+      : `No disponible: ${j.motivo}. Correrá solo con detectores determinísticos.`;
+  }
+
+  function renderDestino() {
+    const o = S.cfg.objetivos.find(x => x.nombre === S.form.objetivo);
+    if (!o) { $('n-destino').innerHTML = ''; return; }
+    const explica = {
+      guardrail: 'Solo el filtro de entrada. Milisegundos por caso, coste cero.',
+      agente: 'El sistema completo. Una llamada real al LLM por caso.',
+      http: 'Un servicio remoto por HTTP. Una petición real por caso.',
+      simulado: 'Objetivo de mentira para verificar el arnés. Sin coste.',
+    }[o.tipo] || '';
+    $('n-destino').innerHTML = `${o.con_coste ? '<span class="etq-coste">CUESTA</span>' : '<span class="etq-gratis">GRATIS</span>'}<span>${esc(explica)}</span>${o.destino ? `<code title="${esc(o.destino)}">${esc(o.destino)}</code>` : ''}`;
+  }
+
+  let planTimer = null, planSeq = 0;
+  function planificar() {
+    clearTimeout(planTimer);
+    planTimer = setTimeout(planificarAhora, 120);
+  }
+
+  function parametros() {
+    const f = S.form, todas = Object.keys(S.cfg.suites);
+    const suites = [...f.suites].filter(s => todas.includes(s));
+    return {
+      objetivo: f.objetivo,
+      suites: suites.length === todas.length ? null : (suites.length ? suites : ['__ninguna__']),
+      severidad: f.sev || null,
+      limite: f.limite ? +f.limite : null,
+      workers: +f.workers || 4,
+      usar_juez: !!f.juez,
+      generar_html: !!f.html,
+    };
+  }
+
+  async function planificarAhora() {
+    const p = parametros(), seq = ++planSeq;
+    if (!S.form.suites.size) {
+      S.plan = null;
+      $('n-plan-cuerpo').innerHTML = '<div class="nota">Elige al menos una suite.</div>';
+      $('n-lanzar').disabled = true;
+      return;
+    }
+    const q = new URLSearchParams();
+    q.set('objetivo', p.objetivo);
+    if (p.suites) q.set('suites', p.suites.join(','));
+    if (p.severidad) q.set('severidad', p.severidad);
+    if (p.limite) q.set('limite', p.limite);
+    q.set('workers', p.workers);
+    q.set('usar_juez', p.usar_juez ? '1' : '0');
+    try {
+      const plan = await api('/api/plan?' + q.toString());
+      if (seq !== planSeq) return;
+      S.plan = plan; renderPlan();
+    } catch (e) {
+      if (seq !== planSeq) return;
+      S.plan = null;
+      $('n-plan-cuerpo').innerHTML = `<div class="error-inline">${esc(e.message)}</div>`;
+      $('n-lanzar').disabled = true;
+    }
+  }
+
+  function renderPlan() {
+    const p = S.plan, ataques = p.total - p.benignos;
+    const cats = Object.entries(p.por_categoria).sort((a, b) => b[1] - a[1]);
+    const maxC = Math.max(1, ...cats.map(([, n]) => n));
+    const sevs = ['critica', 'alta', 'media', 'baja'].filter(s => p.por_severidad[s]).map(s => `<span class="sev sev-${s}">${s} ${p.por_severidad[s]}</span>`).join(' ');
+    const j = S.cfg.juez;
+    const juezTxt = !p.usar_juez ? 'Sin juez LLM: solo detectores determinísticos.'
+      : (j.disponible ? `Juez LLM (${j.modelo}) para los casos que las reglas no cierren.` : `Juez pedido pero no disponible (${j.motivo}).`);
+
+    $('n-plan-cuerpo').innerHTML = `
+      <div class="grande">${p.total}<small>casos</small></div>
+      <div class="sub">${ataques} ataques · ${p.benignos} controles legítimos${p.benignos === 0 ? ' <span title="Sin la suite controles no medirás falsos positivos">⚠</span>' : ''}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">${sevs}</div>
+      <h4>Por categoría</h4>
+      <div class="barras">${cats.map(([k, n]) => barraHtml(k, n, maxC, 'f-serie', `<b>${n}</b>`, false, '', true)).join('')}</div>
+      ${p.con_coste
+        ? `<div class="coste"><b>${p.total} llamadas reales</b> a <code>${esc(p.objetivo)}</code> (tipo ${esc(p.tipo)}), en ${p.workers} paralelo${p.workers > 1 ? 's' : ''}. Cada una consume tokens y deja traza en el sistema atacado.</div>`
+        : `<div class="gratis">Objetivo de tipo <b>${esc(p.tipo)}</b>: sin coste por caso. Puedes iterar tantas veces como quieras.</div>`}
+      <div class="ayuda" style="font-size:12px;color:var(--texto-3)">${esc(juezTxt)}</div>`;
+    $('n-lanzar').disabled = p.total === 0;
+    if (p.total === 0) $('n-plan-cuerpo').insertAdjacentHTML('beforeend', '<div class="error-inline">Ningún caso coincide con los filtros.</div>');
+  }
+
+  function mostrarError(msg) { const e = $('n-error'); e.textContent = msg; e.classList.remove('oculto'); }
+  function ocultarConfirmacion() { $('n-confirmar').classList.add('oculto'); $('n-confirmo').checked = false; $('n-confirmar-ok').disabled = true; $('n-lanzar').classList.remove('oculto'); }
+
+  async function lanzar(confirmado) {
+    $('n-error').classList.add('oculto');
+    const p = {...parametros(), confirmar: !!confirmado};
+    if (p.suites && p.suites[0] === '__ninguna__') { mostrarError('Elige al menos una suite.'); return; }
+    $('n-lanzar').disabled = true; $('n-confirmar-ok').disabled = true;
+    try {
+      const r = await post('/api/correr', p);
+      ocultarConfirmacion();
+      abrirLive(r);
+    } catch (e) {
+      $('n-lanzar').disabled = false;
+      if (e.cuerpo?.requiere_confirmacion) {
+        $('n-confirmar-txt').innerHTML = `Vas a enviar <b>${e.cuerpo.casos} payloads</b> a <code>${esc(p.objetivo)}</code> (tipo <b>${esc(e.cuerpo.tipo)}</b>). ${e.cuerpo.tipo === 'agente' ? 'Cada caso es una llamada al LLM del agente y dejará una traza en Langfuse.' : 'Cada caso es una petición real al servicio remoto.'}`;
+        $('n-confirmar').classList.remove('oculto'); $('n-lanzar').classList.add('oculto');
+        return;
+      }
+      if (e.estado === 409 && e.cuerpo?.corrida) { abrirLive(e.cuerpo.corrida); return; }
+      mostrarError(e.message);
+    }
+  }
+
+  $('b-nueva').addEventListener('click', () => abrirNueva());
+  $('n-cancelar-form').addEventListener('click', () => S.corridas.length ? seleccionar(S.sel || S.corridas[0].archivo) : mostrar('nueva'));
+  $('n-objetivo').addEventListener('change', (e) => { S.form.objetivo = e.target.value; renderDestino(); planificar(); });
+  $('n-sev').addEventListener('change', (e) => { S.form.sev = e.target.value; planificar(); });
+  $('n-limite').addEventListener('input', (e) => { S.form.limite = e.target.value; planificar(); });
+  $('n-workers').addEventListener('input', (e) => { S.form.workers = Math.min(16, Math.max(1, +e.target.value || 1)); planificar(); });
+  $('n-juez').addEventListener('change', (e) => { S.form.juez = e.target.checked; planificar(); });
+  $('n-html').addEventListener('change', (e) => { S.form.html = e.target.checked; });
+  $('n-todas').addEventListener('click', () => { S.form.suites = new Set(Object.keys(S.cfg.suites)); renderFormulario(); planificar(); });
+  $('n-ninguna').addEventListener('click', () => { S.form.suites = new Set(); renderFormulario(); planificar(); });
+  $('n-lanzar').addEventListener('click', () => lanzar(false));
+  $('n-confirmo').addEventListener('change', (e) => { $('n-confirmar-ok').disabled = !e.target.checked; });
+  $('n-confirmar-ok').addEventListener('click', () => lanzar(true));
+  $('n-confirmar-no').addEventListener('click', ocultarConfirmacion);
+  $('b-repetir').addEventListener('click', () => {
+    const d = S.detalle; if (!d) return;
+    const suites = new Set(d.resultados.map(r => (r.caso.archivo_origen || '').replace(/\.yaml$/, '')).filter(Boolean));
+    abrirNueva({objetivo: d.objetivo, suites: suites.size ? suites : new Set(Object.keys(S.cfg.suites || {})), juez: d.juez_activo});
+  });
+
+  // ═══════════════════════ corrida en vivo ═══════════════════════
+  function abrirLive(estado) {
+    cerrarFlujo();
+    const L = S.live;
+    L.id = estado.id; L.estado = estado; L.total = estado.total; L.inicio = new Date(estado.inicio);
+    $('l-log').innerHTML = '';
+    $('l-aviso').classList.add('oculto');
+    $('l-ver').classList.add('oculto'); $('l-otra').classList.add('oculto');
+    $('l-cancelar').classList.remove('oculto'); $('l-cancelar').disabled = false; $('l-cancelar').textContent = '■ Cancelar';
+    mostrar('live');
+    pintarLive(estado);
+    // Historial completo desde 0: si la página se recargó a mitad de corrida,
+    // el servidor repite lo que ya pasó y luego sigue en vivo.
+    const es = new EventSource(`/api/eventos?id=${encodeURIComponent(L.id)}&desde=0`);
+    L.es = es;
+    es.addEventListener('inicio', (e) => { const d = JSON.parse(e.data); L.total = d.total; L.estado = {...L.estado, fase:'corriendo', total:d.total, juez_activo:d.juez_activo, juez_motivo:d.juez_motivo}; pintarLive(L.estado); });
+    es.addEventListener('caso', (e) => { const d = JSON.parse(e.data); agregarCaso(d); L.estado = {...L.estado, fase:'corriendo', completados:d.completados, penetraron:d.penetraron, contenidos:d.contenidos, errores:d.errores, asr_parcial:d.asr_parcial}; pintarLive(L.estado); });
+    es.addEventListener('cancelando', () => { L.estado = {...L.estado, cancelacion_pedida:true}; pintarLive(L.estado); });
+    es.addEventListener('fin', (e) => { const d = JSON.parse(e.data); cerrarFlujo(); L.estado = {...L.estado, fase: d.cancelada ? 'cancelada' : 'terminada', archivo: d.archivo, duracion_s: d.duracion_s}; pintarLive(L.estado); recargarCorridas(); });
+    es.addEventListener('fallo', (e) => { const d = JSON.parse(e.data); cerrarFlujo(); L.estado = {...L.estado, fase:'error', mensaje:d.mensaje}; pintarLive(L.estado); });
+    es.onerror = () => { /* EventSource reintenta solo con Last-Event-ID; si la corrida ya acabó, el servidor cierra y no pasa nada */ };
+    clearInterval(L.reloj);
+    L.reloj = setInterval(() => { if (S.live.estado && ['preparando', 'corriendo'].includes(S.live.estado.fase)) $('l-tiempo').textContent = seg((Date.now() - L.inicio) / 1000); }, 1000);
+  }
+
+  function cerrarFlujo() { if (S.live.es) { S.live.es.close(); S.live.es = null; } }
+
+  function agregarCaso(d) {
+    const tr = document.createElement('tr');
+    tr.className = 'nuevo';
+    tr.innerHTML = `<td class="idx">${d.completados}/${d.total}</td><td class="res">${resHtml[d.resultado]}${d.benigno ? ' <span class="etq" title="Control legítimo: penetró = falso positivo">control</span>' : ''}</td>
+      <td class="mono">${esc(d.id)}</td><td>${esc(d.categoria)}</td><td><span class="sev sev-${esc(d.severidad)}">${esc(d.severidad)}</span></td>
+      <td title="${esc(d.evidencia)}">${esc(d.nota)}</td>
+      <td>${d.llm ? LLM_HTML[d.llm] + (d.llm === 'cedio' && d.bloqueado ? ' <span class="etq">tapado</span>' : '') : '<span class="res-err">—</span>'}</td>
+      <td class="resp">${d.texto ? `<div class="txt" title="${esc(d.texto)}">${esc(d.texto)}</div>` : `<span class="mudo">${d.bloqueado ? 'no se ejecutó: detenido en la entrada' : (d.resultado === 'err' ? 'sin medir' : '—')}</span>`}</td>
+      <td class="ms">${d.latencia_ms}</td>`;
+    const log = $('l-log');
+    log.appendChild(tr);
+    const caja = log.closest('.log');
+    if (caja.scrollHeight - caja.scrollTop - caja.clientHeight < 80) caja.scrollTop = caja.scrollHeight;
+  }
+
+  function pintarLive(e) {
+    const total = e.total || S.live.total || 0, hechos = e.completados || 0;
+    $('l-objetivo').textContent = e.objetivo;
+    $('l-tipo').textContent = e.tipo || e.tipo_objetivo || '';
+    const fases = {
+      preparando: ['viva', 'preparando el objetivo…'],
+      corriendo: ['viva', e.cancelacion_pedida ? 'cancelando…' : 'en curso'],
+      terminada: ['lista', 'terminada'],
+      cancelada: ['parada', 'cancelada'],
+      error: ['rota', 'falló'],
+    }[e.fase] || ['viva', e.fase];
+    $('l-fase').className = 'fase ' + fases[0]; $('l-fase').innerHTML = `<i></i>${esc(fases[1])}`;
+    $('l-meta').textContent = `${fecha(e.inicio)} · ${e.peticion?.workers || e.workers || ''} workers · juez ${e.juez_activo === undefined ? (e.peticion?.usar_juez ? 'pedido' : 'desactivado') : (e.juez_activo ? 'activo' : 'inactivo')}`;
+
+    const w = (n) => total ? (n / total * 100) + '%' : '0%';
+    const b = $('l-barra').children;
+    b[0].style.width = w(e.penetraron || 0); b[1].style.width = w(e.contenidos || 0); b[2].style.width = w(e.errores || 0);
+    $('l-prog').textContent = total ? `${hechos} de ${total} casos` : 'cargando casos…';
+    if (e.duracion_s) $('l-tiempo').textContent = seg(e.duracion_s);
+
+    const evaluados = hechos - (e.errores || 0);
+    $('l-asr').textContent = evaluados ? pct(e.asr_parcial || 0) : '—';
+    const st = evaluados ? estado(e.asr_parcial || 0) : {c:'neutro', t:'sin casos evaluados aún'};
+    $('l-asr-estado').className = 'estado e-' + st.c; $('l-asr-estado').innerHTML = estadoHtml(st);
+    $('l-pen').textContent = e.penetraron || 0; $('l-con').textContent = e.contenidos || 0; $('l-err').textContent = e.errores || 0;
+
+    const viva = ['preparando', 'corriendo'].includes(e.fase);
+    $('l-cancelar').classList.toggle('oculto', !viva);
+    $('l-cancelar').disabled = !!e.cancelacion_pedida;
+    if (e.cancelacion_pedida && viva) $('l-cancelar').textContent = 'Cancelando…';
+    $('l-otra').classList.toggle('oculto', viva);
+    $('l-ver').classList.toggle('oculto', viva || !e.archivo);
+    $('l-ver').onclick = () => seleccionar(e.archivo);
+
+    // chip de la barra lateral
+    $('b-live').classList.toggle('oculto', !viva);
+    if (viva) { $('live-mini').textContent = total ? `${hechos}/${total}` : '…'; $('live-mini-obj').textContent = e.objetivo; }
+
+    const aviso = $('l-aviso');
+    if (e.fase === 'error') { aviso.className = 'aviso-box rojo'; aviso.textContent = 'La corrida no pudo ejecutarse: ' + (e.mensaje || 'error desconocido'); }
+    else if (e.fase === 'cancelada') { aviso.className = 'aviso-box'; aviso.textContent = e.archivo ? `Cancelada tras ${hechos} casos. El informe parcial se guardó igual; solo contiene lo que de verdad se midió.` : 'Cancelada antes de medir ningún caso. No se guardó informe.'; }
+    else if (e.fase === 'terminada' && !e.archivo) { aviso.className = 'aviso-box'; aviso.textContent = 'Terminó sin resultados que guardar.'; }
+    else if (e.fase === 'corriendo' && e.juez_activo === false && e.peticion?.usar_juez && e.juez_motivo) { aviso.className = 'aviso-box'; aviso.textContent = `Juez LLM inactivo (${e.juez_motivo}): solo detectores determinísticos.`; }
+    else { aviso.classList.add('oculto'); return; }
+    aviso.classList.remove('oculto');
+  }
+
+  $('l-cancelar').addEventListener('click', async () => {
+    $('l-cancelar').disabled = true; $('l-cancelar').textContent = 'Cancelando…';
+    try { await post('/api/cancelar'); } catch (e) { $('l-cancelar').disabled = false; $('l-cancelar').textContent = '■ Cancelar'; }
+  });
+  $('l-otra').addEventListener('click', () => abrirNueva());
+  $('b-live').addEventListener('click', () => S.live.estado && (S.live.es ? mostrar('live') : abrirLive(S.live.estado)));
+
+  // ── arranque ──
+  (async function init() {
+    try { S.corridas = await api('/api/corridas'); }
+    catch (e) { $('cargando').textContent = 'No se pudo leer reports/: ' + e.message; return; }
+    renderLista();
+
+    // ¿Hay una corrida viva de antes de recargar? Volvemos a engancharnos.
+    let activa = null;
+    try { activa = await api('/api/corrida-activa'); } catch (_) { /* servidor antiguo */ }
+    if (activa && activa.activa) { abrirLive(activa); return; }
+    if (activa) S.live.estado = activa;
+
+    const pedido = decodeURIComponent(location.hash.slice(1));
+    if (pedido === 'nueva' || !S.corridas.length) { abrirNueva(); if (!S.corridas.length) $('cargando').classList.add('oculto'); return; }
+    if (pedido === 'live' && activa) { abrirLive(activa); return; }
+    seleccionar(S.corridas.some(c => c.archivo === pedido) ? pedido : S.corridas[0].archivo);
+  })();
+})();
+</script>
+</body>
+</html>

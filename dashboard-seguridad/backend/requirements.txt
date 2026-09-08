@@ -1,0 +1,15 @@
+# Backend del dashboard (FastAPI). Python 3.10–3.13 (DeepTeam no soporta 3.14).
+fastapi>=0.110
+uvicorn>=0.29
+python-dotenv>=1.0
+PyYAML>=6.0
+requests>=2.31
+openai>=1.76
+# Motor de DeepTeam (Confident AI). sentry-sdk lo importa pero no lo declara.
+deepteam>=1.0.9
+sentry-sdk>=2.0
+
+# Red Turing se importa desde ../../Red-Turing (mismas dependencias: PyYAML,
+# python-dotenv, requests, openai). Para atacar un objetivo de tipo `agente`
+# (Python importable) instala además las dependencias de ESE proyecto en este
+# mismo entorno. Los objetivos de tipo `http` no necesitan nada más.

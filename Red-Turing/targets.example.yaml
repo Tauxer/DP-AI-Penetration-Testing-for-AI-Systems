@@ -1,0 +1,76 @@
+# Objetivos atacables por Red Turing.
+#
+# Copia este archivo a targets.yaml y ajusta las rutas. targets.yaml está en el
+# .gitignore porque contiene rutas locales y nombres de variables de entorno.
+#
+# Tipos disponibles:
+#   guardrail — ataca solo el filtro de entrada. Rápido y barato. Solo responde
+#               si el payload entra o no; no ve nada de lo que pase después.
+#   agente    — ataca el sistema completo. Consume tokens en cada caso, pero es
+#               el único que detecta fugas del prompt y abuso de herramientas.
+#   http      — ataca cualquier proyecto expuesto por HTTP, sin compartir el
+#               entorno de Python. Es el adaptador para proyectos ajenos.
+
+targets:
+
+  guardrail-databot:
+    tipo: guardrail
+    ruta_proyecto: "../LangChain-AgenteIA-MultiTool-Seguridad"
+    modulo: "guardrails.input_guardrail"
+    funcion: "verificar_input_guardrail"
+
+  agente-databot:
+    tipo: agente
+    ruta_proyecto: "../LangChain-AgenteIA-MultiTool-Seguridad"
+    modulo: "agente_sec_langfuse"
+    funcion: "chat_con_agente"
+    # Guardrail previo (opcional pero recomendado): consulta el filtro de entrada
+    # ANTES de llamar al agente. Así cada caso registra qué capa lo detuvo y, si
+    # ninguna lo detuvo, qué contestó el LLM. Sin esto, el bloqueo se infiere de
+    # la respuesta y la capa queda sin atribuir. Las capas de IA corren dos veces
+    # por caso que pasa (el agente vuelve a ejecutar su guardrail): solo latencia.
+    guardrail:
+      modulo: "guardrails.input_guardrail"
+      funcion: "verificar_input_guardrail"
+      # Medir también la SEGUNDA línea de defensa: el LLM recibe el payload
+      # aunque el guardrail lo haya bloqueado (Red Turing neutraliza el guardrail
+      # interno del agente solo en este proceso; ya lo consultó él mismo). El
+      # informe suma un "ASR solo LLM" y cada caso trae veredicto del filtro Y
+      # respuesta del modelo. Cuesta una llamada al LLM por caso, sin excepción.
+      evaluar_llm_siempre: true
+      # nombre_en_agente: "verificar_input_guardrail"   # si el agente la importa con otro nombre
+    # param_sesion se detecta solo inspeccionando la firma. Decláralo si tu
+    # función usa otro nombre, o ponlo vacío si no acepta sesión.
+    # formato_sesion: uuid (por defecto, obligatorio con PostgresChatMessageHistory)
+    #                 prefijo → "redturing-<hex>", solo si tu almacén acepta texto libre
+    formato_sesion: uuid
+
+  guardrail-llm-local:
+    tipo: guardrail
+    ruta_proyecto: "../LangChain-AgenteIA-MultiTool-Seguridad-LLMLocal"
+    modulo: "guardrails.input_guardrail"
+    funcion: "verificar_input_guardrail"
+
+  # Ejemplo de objetivo remoto. El token NUNCA se escribe aquí: se nombra la
+  # variable de entorno que lo contiene y Red Turing la lee del entorno.
+  api-produccion:
+    tipo: http
+    url: "https://tu-api.example.com/chat"
+    metodo: POST
+    cuerpo:
+      mensaje: "{payload}"
+      session_id: "redturing"
+    ruta_respuesta: "respuesta"
+    codigos_bloqueo: [403, 422]
+    env_token: "RT_TOKEN_API_PRODUCCION"
+
+  # Objetivos simulados: sirven para verificar que Red Turing detecta de verdad,
+  # antes de sacar conclusiones sobre un sistema real. Modos: vulnerable,
+  # blindado, realista.
+  simulado-vulnerable:
+    tipo: simulado
+    modo: vulnerable
+
+  simulado-blindado:
+    tipo: simulado
+    modo: blindado
