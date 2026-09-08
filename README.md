@@ -3,6 +3,8 @@
 Framework de red teaming para agentes LLM, construido en el Programa AI Engineer
 de DataPath. Dos motores complementarios y un dashboard que los une.
 
+Todo vive bajo `Sistema-de-Testing-de-Seguridad/`:
+
 | Carpeta | Qué es |
 |---|---|
 | `Red-Turing/` | Arnés de ataques con **corpus fijo** (87 casos YAML) y veredictos determinísticos: canario, marcador, capa del guardrail que bloqueó. Para regresión. Tiene CLI y su propio dashboard mínimo. |
@@ -24,7 +26,7 @@ Requisitos: Python 3.10 a 3.13, Node 20 o superior, una clave de OpenAI.
 
 ```bash
 git clone https://github.com/KevinInoCol/DP-AI-Penetration-Testing-for-AI-Systems.git
-cd DP-AI-Penetration-Testing-for-AI-Systems
+cd DP-AI-Penetration-Testing-for-AI-Systems/Sistema-de-Testing-de-Seguridad
 
 # 1. Entorno Python
 python -m venv .venv && source .venv/bin/activate        # o tu entorno conda
@@ -63,15 +65,16 @@ Para medir el guardrail y el modelo por separado hace falta un objetivo de tipo
 - El dashboard solo escucha en `127.0.0.1` y rechaza peticiones cuyo Host u
   Origin no sean locales. Los informes contienen los payloads que atravesaron
   las defensas y las respuestas literales del agente: no lo expongas.
-- Los informes (`Red-Turing/reports/*.json`, `deepteam-pruebas/resultados/*.json`)
+- Los informes (`Sistema-de-Testing-de-Seguridad/Red-Turing/reports/*.json`,
+  `Sistema-de-Testing-de-Seguridad/deepteam-pruebas/resultados/*.json`)
   y `targets.yaml` están fuera del repositorio a propósito.
 - Todo lo que cuesta dinero pide confirmación con la cifra de llamadas.
 - Solo contra sistemas propios o con autorización escrita.
 
 ## Documentación
 
-- `Red-Turing/README.md` — el arnés, el corpus, los detectores, el ASR.
-- `dashboard-seguridad/README.md` — arquitectura del dashboard y su API.
-- `deepteam-pruebas/README.md` — lo aprendido probando DeepTeam.
+- `Sistema-de-Testing-de-Seguridad/Red-Turing/README.md` — el arnés, el corpus, los detectores, el ASR.
+- `Sistema-de-Testing-de-Seguridad/dashboard-seguridad/README.md` — arquitectura del dashboard y su API.
+- `Sistema-de-Testing-de-Seguridad/deepteam-pruebas/README.md` — lo aprendido probando DeepTeam.
 
 Autor: Ing. Kevin Inofuente Colque — DataPath, Programa AI Engineer.

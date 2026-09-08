@@ -27,7 +27,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-RAIZ_MODULO = Path(__file__).resolve().parent.parent
+RAIZ_MODULO = Path(__file__).resolve().parent.parent.parent
 RAIZ_AGENTE = RAIZ_MODULO / "LangChain-AgenteIA-MultiTool-Seguridad"
 load_dotenv(RAIZ_AGENTE / ".env")  # OPENAI_API_KEY y demás; nunca se imprimen
 

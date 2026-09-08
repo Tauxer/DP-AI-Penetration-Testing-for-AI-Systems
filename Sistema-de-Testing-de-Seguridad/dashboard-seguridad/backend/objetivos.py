@@ -34,8 +34,8 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
-RAIZ_MODULO = Path(__file__).resolve().parent.parent.parent
-RAIZ_REDTURING = RAIZ_MODULO / "Red-Turing"
+RAIZ_TESTING = Path(__file__).resolve().parent.parent.parent
+RAIZ_REDTURING = RAIZ_TESTING / "Red-Turing"
 RUTA_TARGETS = RAIZ_REDTURING / "targets.yaml"
 
 if str(RAIZ_REDTURING) not in sys.path:

@@ -114,7 +114,7 @@ importa el código del proyecto objetivo, así que sus dependencias tienen que
 estar en este mismo entorno:
 
 ```bash
-pip install -r ../LangChain-AgenteIA-MultiTool-Seguridad/requirements.txt
+pip install -r ../../LangChain-AgenteIA-MultiTool-Seguridad/requirements.txt
 ```
 
 Si prefieres no mezclar entornos, expón tu proyecto por HTTP y usa el objetivo

@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 
 # La clave de OpenAI vive en el .env del proyecto del agente. Se carga al entorno;
 # nunca se lee ni se imprime aquí.
-RAIZ_MODULO = Path(__file__).resolve().parent.parent
+RAIZ_MODULO = Path(__file__).resolve().parent.parent.parent
 load_dotenv(RAIZ_MODULO / "LangChain-AgenteIA-MultiTool-Seguridad" / ".env")
 
 # Sin telemetría hacia Confident AI / PostHog / Sentry.

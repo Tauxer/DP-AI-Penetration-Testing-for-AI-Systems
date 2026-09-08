@@ -2,7 +2,7 @@
 
 cd Red-Turing
 source .venv/bin/activate
-pip install -r ../LangChain-AgenteIA-MultiTool-Seguridad/requirements.txt
+pip install -r ../../LangChain-AgenteIA-MultiTool-Seguridad/requirements.txt
 
 
 python -m redturing correr --objetivo agente-databot --suite prompt_injection --limite 3 --workers 1

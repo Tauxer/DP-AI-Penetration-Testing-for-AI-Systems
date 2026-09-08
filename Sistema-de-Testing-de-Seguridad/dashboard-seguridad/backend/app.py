@@ -25,8 +25,12 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-RAIZ_MODULO = Path(__file__).resolve().parent.parent.parent
-RAIZ_REDTURING = RAIZ_MODULO / "Red-Turing"
+# El dashboard vive en Sistema-de-Testing-de-Seguridad/dashboard-seguridad/backend/,
+# así que su abuelo es la carpeta del sistema de testing y el bisabuelo la raíz
+# del módulo, donde están los agentes objetivo (fuera del sistema de testing).
+RAIZ_TESTING = Path(__file__).resolve().parent.parent.parent
+RAIZ_MODULO = RAIZ_TESTING.parent
+RAIZ_REDTURING = RAIZ_TESTING / "Red-Turing"
 DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 
 # Credenciales del propio dashboard: la clave de OpenAI para el adversario y el

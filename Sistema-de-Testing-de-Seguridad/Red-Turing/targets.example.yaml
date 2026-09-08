@@ -15,13 +15,13 @@ targets:
 
   guardrail-databot:
     tipo: guardrail
-    ruta_proyecto: "../LangChain-AgenteIA-MultiTool-Seguridad"
+    ruta_proyecto: "../../LangChain-AgenteIA-MultiTool-Seguridad"
     modulo: "guardrails.input_guardrail"
     funcion: "verificar_input_guardrail"
 
   agente-databot:
     tipo: agente
-    ruta_proyecto: "../LangChain-AgenteIA-MultiTool-Seguridad"
+    ruta_proyecto: "../../LangChain-AgenteIA-MultiTool-Seguridad"
     modulo: "agente_sec_langfuse"
     funcion: "chat_con_agente"
     # Guardrail previo (opcional pero recomendado): consulta el filtro de entrada
@@ -47,7 +47,7 @@ targets:
 
   guardrail-llm-local:
     tipo: guardrail
-    ruta_proyecto: "../LangChain-AgenteIA-MultiTool-Seguridad-LLMLocal"
+    ruta_proyecto: "../../LangChain-AgenteIA-MultiTool-Seguridad-LLMLocal"
     modulo: "guardrails.input_guardrail"
     funcion: "verificar_input_guardrail"
 

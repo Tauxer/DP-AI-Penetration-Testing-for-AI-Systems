@@ -26,9 +26,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-RAIZ_MODULO = Path(__file__).resolve().parent.parent.parent
+# RAIZ_TESTING = Sistema-de-Testing-de-Seguridad/ (aquí viven los arneses);
+# RAIZ_MODULO = la raíz del módulo, un nivel arriba (aquí viven los agentes).
+RAIZ_TESTING = Path(__file__).resolve().parent.parent.parent
+RAIZ_MODULO = RAIZ_TESTING.parent
 RAIZ_AGENTE = RAIZ_MODULO / "LangChain-AgenteIA-MultiTool-Seguridad"
-RAIZ_PRUEBAS = RAIZ_MODULO / "deepteam-pruebas"
+RAIZ_PRUEBAS = RAIZ_TESTING / "deepteam-pruebas"
 DIR_RESULTADOS = RAIZ_PRUEBAS / "resultados"
 ARCHIVO_CONFIG = Path(__file__).resolve().parent / "config.json"
 
