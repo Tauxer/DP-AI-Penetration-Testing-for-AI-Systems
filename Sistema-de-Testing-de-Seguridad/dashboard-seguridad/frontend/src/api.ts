@@ -128,7 +128,7 @@ export interface EstadoCorrida {
 
 // ── DeepTeam ──
 export interface Vulnerabilidad { nombre: string; descripcion: string; tipos: string[]; recomendada: boolean; contenido_daniino: boolean }
-export interface Ataque { nombre: string; descripcion: string; multi_turno: boolean; usa_llm: boolean; parametros: string[]; recomendado: boolean }
+export interface Ataque { nombre: string; descripcion: string; para_que: string; multi_turno: boolean; usa_llm: boolean; parametros: string[]; recomendado: boolean }
 export interface ModeloPreset { id: string; nombre: string; nota: string }
 export interface ConfigDT {
   equipo?: string; objetivo_por_defecto?: string

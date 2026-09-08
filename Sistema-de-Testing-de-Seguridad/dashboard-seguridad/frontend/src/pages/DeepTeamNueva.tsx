@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ApiError, api, type Catalogo, type ConfigDT, type EstadoDT } from '../api'
+import { ApiError, api, type Ataque, type Catalogo, type ConfigDT, type EstadoDT } from '../api'
 import { useCarga } from '../components/comunes'
 
 interface Estimacion { casos: number; llamadas_agente_min: number; llamadas_agente_max: number; llamadas_adversario_aprox: number; llamadas_juez: number; incluye_multi_turno: boolean }
@@ -18,6 +18,24 @@ function SelectorModelo({ rot, ayuda, valor, onChange, modelos }: { rot: string;
         <div className="nota">{preset?.nota ?? ayuda}</div>
       </div>
     </div>
+  )
+}
+
+// Cada método de ataque se muestra como tarjeta en una rejilla de tres columnas,
+// con la mecánica y para qué sirve, porque el nombre solo (SyntheticContextInjection,
+// BadLikertJudge…) no dice a quién le conviene elegirlo.
+function TarjetaAtaque({ a, on, onClick }: { a: Ataque; on: boolean; onClick: () => void }) {
+  return (
+    <button type="button" className={`metodo ${on ? 'on' : ''}`} aria-pressed={on} onClick={onClick}>
+      <span className="cab-m">
+        <b>{a.nombre}</b>
+        {a.recomendado && <span className="etq dt">recomendado</span>}
+        {!a.usa_llm && <span className="etq">sin LLM</span>}
+        {a.multi_turno && <span className="etq rojo">×5 turnos</span>}
+      </span>
+      <span className="q">{a.descripcion}</span>
+      <span className="p">{a.para_que}</span>
+    </button>
   )
 }
 
@@ -114,22 +132,28 @@ export default function DeepTeamNueva() {
 
           <section className="panel">
             <h3>Vulnerabilidades</h3><p className="desc">Qué debilidad busca el adversario. Cada tipo genera sus propios casos. <button className="btn chico" onClick={() => setVerTodas(!verTodas)}>{verTodas ? 'Solo recomendadas' : `Ver las ${cat.vulnerabilidades.length}`}</button></p>
-            {listaVulns.map(v => {
+            <div className="vulns">{listaVulns.map(v => {
               const on = !!vulns[v.nombre]
               return (
+                // Los chips de tipo quedan FUERA del <label>: dentro, cada clic en un
+                // tipo alternaría además la casilla de la vulnerabilidad entera.
                 <div key={v.nombre} className={`vuln ${on ? 'on' : ''}`}>
-                  <label className="cab-v"><input type="checkbox" checked={on} onChange={() => toggleVuln(v.nombre, v.tipos)} /><b>{v.nombre}</b><span className="d" title={v.descripcion}>{v.descripcion}</span>{v.contenido_daniino && <span className="etq rojo" title="Genera contenido dañino real; quedará en los JSON y en Langfuse">dañino</span>}</label>
+                  <label className="cab-v">
+                    <input type="checkbox" checked={on} onChange={() => toggleVuln(v.nombre, v.tipos)} />
+                    <span className="nom"><b>{v.nombre}</b>{v.contenido_daniino && <span className="etq rojo" title="Genera contenido dañino real; quedará en los JSON y en Langfuse">dañino</span>}</span>
+                    <span className="d">{v.descripcion}</span>
+                  </label>
                   {on && <div className="tipos">{v.tipos.map(t => <button key={t} type="button" className={`chip dt ${vulns[v.nombre]?.has(t) ? 'on' : ''}`} onClick={() => toggleTipo(v.nombre, t, v.tipos)}>{t}</button>)}</div>}
                 </div>
               )
-            })}
+            })}</div>
           </section>
 
           <section className="panel">
             <h3>Métodos de ataque</h3><p className="desc">Cómo disfraza el adversario cada petición. Los multi-turno mantienen una conversación con TramiBot y cuestan varias llamadas por caso.</p>
-            <div className="chips">{cat.ataques.filter(a => !a.multi_turno).map(a => <button key={a.nombre} type="button" className={`chip dt ${ataques.has(a.nombre) ? 'on' : ''}`} title={a.descripcion} onClick={() => toggleAtaque(a.nombre)}>{a.nombre}{!a.usa_llm && <span className="n">sin LLM</span>}</button>)}</div>
-            <span className="rot" style={{ display: 'block', margin: '12px 0 6px', fontSize: 12, fontWeight: 600, color: 'var(--texto-2)' }}>Multi-turno</span>
-            <div className="chips">{cat.ataques.filter(a => a.multi_turno).map(a => <button key={a.nombre} type="button" className={`chip dt peligro ${ataques.has(a.nombre) ? 'on' : ''}`} title={a.descripcion} onClick={() => toggleAtaque(a.nombre)}>{a.nombre}<span className="n">×5 turnos</span></button>)}</div>
+            <div className="metodos">{cat.ataques.filter(a => !a.multi_turno).map(a => <TarjetaAtaque key={a.nombre} a={a} on={ataques.has(a.nombre)} onClick={() => toggleAtaque(a.nombre)} />)}</div>
+            <span className="rot sep-metodos">Multi-turno<span className="ayuda">Mantienen una conversación de varios turnos con el agente: son los más eficaces y los más caros.</span></span>
+            <div className="metodos">{cat.ataques.filter(a => a.multi_turno).map(a => <TarjetaAtaque key={a.nombre} a={a} on={ataques.has(a.nombre)} onClick={() => toggleAtaque(a.nombre)} />)}</div>
           </section>
 
           <section className="panel">
